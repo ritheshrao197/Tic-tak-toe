@@ -1,4 +1,6 @@
-
-public interface IGameEvent
+namespace TicTacToe.Events
 {
+    public interface IGameEvent
+    {
+    }
 }

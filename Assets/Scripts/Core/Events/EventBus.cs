@@ -2,9 +2,9 @@
 using System;
 using System.Collections.Generic;
 
-namespace TicTacToe.UI.Events
+namespace TicTacToe.Events
 {
-    public static class UIEventBus
+    public static class EventBus
     {
         private static readonly Dictionary<Type, Delegate> Handlers = new();
 
