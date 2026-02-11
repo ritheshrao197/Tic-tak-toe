@@ -42,8 +42,12 @@ public class GameConfigManager : MonoBehaviour
             // Validate configuration
             if (gameConfig == null)
             {
-                Debug.LogError("GameConfig not assigned! Please assign it in the inspector.");
+                GameLogger.LogError("GameConfig not assigned! Please assign it in the inspector.", GameLogger.LogCategory.Configuration);
                 enabled = false;
+            }
+            else
+            {
+                GameLogger.LogInfo("GameConfigManager initialized successfully", GameLogger.LogCategory.Configuration);
             }
         }
         else if (_instance != this)
