@@ -6,14 +6,23 @@ public class AIPlayer
     private PlayerType _aiPlayer;
     private PlayerType _humanPlayer;
     private int _boardSize;
-
+/// <summary>
+/// AI PLayer
+/// </summary>
+/// <param name="aiPlayer"></param>
+/// <param name="boardSize"></param>
     public AIPlayer(PlayerType aiPlayer, int boardSize)
     {
         _aiPlayer = aiPlayer;
         _humanPlayer = aiPlayer == PlayerType.Player1 ? PlayerType.Player2 : PlayerType.Player1;
         _boardSize = boardSize;
     }
-
+/// <summary>
+/// GetBestMove provides best possible move
+/// </summary>
+/// <param name="currentBoard"></param>
+/// <param name="difficulty"></param>
+/// <returns></returns>
     public Vector2Int GetBestMove(PlayerType[,] currentBoard, AIDifficulty difficulty)
     {
         var emptyCells = GetEmptyCells(currentBoard);
@@ -69,7 +78,12 @@ public class AIPlayer
 
         return bestMove;
     }
-
+/// <summary>
+/// Minimax algorithm is used to ai move
+/// </summary>
+/// <param name="board"></param>
+/// <param name="isMaximizing"></param>
+/// <returns></returns>
     private int Minimax(PlayerType[,] board, bool isMaximizing)
     {
         PlayerType winner = CheckWinner(board);
@@ -119,7 +133,11 @@ public class AIPlayer
             return bestScore;
         }
     }
-
+/// <summary>
+/// returns empty celss
+/// </summary>
+/// <param name="board"></param>
+/// <returns></returns>
     private List<Vector2Int> GetEmptyCells(PlayerType[,] board)
     {
         var list = new List<Vector2Int>();
@@ -135,7 +153,11 @@ public class AIPlayer
 
         return list;
     }
-
+/// <summary>
+/// returns true if board is full
+/// </summary>
+/// <param name="board"></param>
+/// <returns></returns>
     private bool IsBoardFull(PlayerType[,] board)
     {
         for (int r = 0; r < _boardSize; r++)
@@ -145,7 +167,11 @@ public class AIPlayer
 
         return true;
     }
-
+/// <summary>
+/// clones the board
+/// </summary>
+/// <param name="original"></param>
+/// <returns></returns>
     private PlayerType[,] CloneBoard(PlayerType[,] original)
     {
         PlayerType[,] copy = new PlayerType[_boardSize, _boardSize];
@@ -156,7 +182,11 @@ public class AIPlayer
 
         return copy;
     }
-
+/// <summary>
+/// Checks the winner
+/// </summary>
+/// <param name="board"></param>
+/// <returns></returns>
     private PlayerType CheckWinner(PlayerType[,] board)
     {
         // Rows

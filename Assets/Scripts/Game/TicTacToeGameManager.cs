@@ -5,9 +5,6 @@ using TicTacToe.Events;
 
 public class TicTacToeGameManager : MonoBehaviour
 {
-    [Header("Configuration")]
-    [SerializeField] private GameConfig _config;
-    
     private BoardModel _boardModel;
     private AIPlayer _aiPlayer;
     private GameMode _currentMode;
@@ -21,15 +18,19 @@ public class TicTacToeGameManager : MonoBehaviour
     
     private void Awake()
     {
-        if (_config == null)
+        // Initialize UI Manager first
+        UIManager.Instance.Initialize();
+        
+        // Validate configuration through manager
+        if (GameConfigManager.Instance.Config == null)
         {
-            Debug.LogError("GameConfig not assigned! Please assign it in the inspector.");
+            Debug.LogError("GameConfig not assigned! Please assign it in the GameConfigManager.");
             enabled = false;
             return;
         }
         
-        _boardModel = new BoardModel(_config.BoardSize, _config.WinCondition);
-        Debug.Log($"[GameManager] Initialized with board size {_config.BoardSize} and win condition {_config.WinCondition}");
+        _boardModel = new BoardModel(GameConfigManager.Instance.BoardSize, GameConfigManager.Instance.WinCondition);
+        Debug.Log($"[GameManager] Initialized with board size {GameConfigManager.Instance.BoardSize} and win condition {GameConfigManager.Instance.WinCondition}");
     }
     
     private void OnEnable()
@@ -130,7 +131,7 @@ public class TicTacToeGameManager : MonoBehaviour
         Debug.Log($"[GameManager] Move executed: Player {player} at [{row}, {col}]");
         
         // Get symbol for this player
-        string symbol = player == PlayerType.Player1 ? _config.Player1Symbol : _config.Player2Symbol;
+        string symbol = player == PlayerType.Player1 ? GameConfigManager.Instance.Player1Symbol : GameConfigManager.Instance.Player2Symbol;
         
         // Publish move event
         EventBus.Publish(new MoveExecutedEvent
@@ -184,12 +185,12 @@ public class TicTacToeGameManager : MonoBehaviour
     
     private IEnumerator MakeAIMove()
     {
-        Debug.Log($"[GameManager] AI thinking for {_config.AIThinkingTime} seconds...");
+        Debug.Log($"[GameManager] AI thinking for {GameConfigManager.Instance.AIThinkingTime} seconds...");
         // Wait for thinking time (for visual feedback)
-        yield return new WaitForSeconds(_config.AIThinkingTime);
+        yield return new WaitForSeconds(GameConfigManager.Instance.AIThinkingTime);
         
         // Get AI move
-        var move = _aiPlayer.GetBestMove(_boardModel.GetBoardCopy(),_config.Difficulty );
+        var move = _aiPlayer.GetBestMove(_boardModel.GetBoardCopy(), GameConfigManager.Instance.Difficulty);
         Debug.Log($"[GameManager] AI selected move: [{move.x}, {move.y}]");
         
         if (move.x >= 0 && move.y >= 0)
