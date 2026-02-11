@@ -50,6 +50,14 @@ public struct ScoreUpdatedEvent : IGameEvent
     public int Player1Score;
     public int Player2Score;
     public int DrawScore;
+  
+
+    public ScoreUpdatedEvent(int Player1Score, int Player2Score, int DrawScore) : this()
+    {
+        this.Player1Score = Player1Score;
+        this.Player2Score = Player2Score;
+        this.DrawScore = DrawScore;
+    }
 }
 
 // ============================================================
