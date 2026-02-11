@@ -1,124 +1,30 @@
 
 using System;
 using System.Collections.Generic;
-using UnityEngine;
-public class EventBus : MonoBehaviour
+
+namespace TicTacToe.UI.Events
 {
-    private static EventBus _instance;
-
-    public static EventBus Instance
+    public static class UIEventBus
     {
-        get
-        {
-            if (_instance == null)
-            {
-                _instance = FindObjectOfType<EventBus>();
+        private static readonly Dictionary<Type, Delegate> Handlers = new();
 
-                if (_instance == null)
-                {
-                    GameObject eventBusObject = new GameObject("EventBus");
-                    _instance = eventBusObject.AddComponent<EventBus>();
-                    DontDestroyOnLoad(eventBusObject);
-                }
-            }
-            return _instance;
-        }
-    }
-
-    private Dictionary<Type, List<Delegate>> _eventListeners = new Dictionary<Type, List<Delegate>>();
-    private void Awake()
-    {
-        if (_instance == null)
+        public static void Subscribe<T>(Action<T> handler) where T : IGameEvent
         {
-            _instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
-        else if (_instance != this)
-        {
-            Destroy(gameObject);
-        }
-    }
-    public void Subscribe<T>(Action<T> listener) where T : IGameEvent
-    {
-        Type eventType = typeof(T);
-
-        if (!_eventListeners.ContainsKey(eventType))
-        {
-            _eventListeners[eventType] = new List<Delegate>();
+            var type = typeof(T);
+            Handlers[type] = (Action<T>)Handlers.GetValueOrDefault(type) + handler;
         }
 
-        if (!_eventListeners[eventType].Contains(listener))
+        public static void Unsubscribe<T>(Action<T> handler) where T : IGameEvent
         {
-            _eventListeners[eventType].Add(listener);
-        }
-        else
-        {
-            Debug.LogWarning($"Listener already subscribed to event {eventType.Name}");
-        }
-    }
-
-    public void Unsubscribe<T>(Action<T> listener) where T : IGameEvent
-    {
-        Type eventType = typeof(T);
-
-        if (_eventListeners.ContainsKey(eventType))
-        {
-            _eventListeners[eventType].Remove(listener);
-
-            // Clean up empty lists
-            if (_eventListeners[eventType].Count == 0)
-            {
-                _eventListeners.Remove(eventType);
-            }
-        }
-    }
-
-    public void ClearSubscriptions<T>() where T : IGameEvent
-    {
-        Type eventType = typeof(T);
-
-        if (_eventListeners.ContainsKey(eventType))
-        {
-            _eventListeners[eventType].Clear();
-            _eventListeners.Remove(eventType);
-        }
-    }
-    public void ClearAllSubscriptions()
-    {
-        _eventListeners.Clear();
-        Debug.Log("EventBus: All subscriptions cleared");
-    }
-
-    public int GetListenerCount<T>() where T : IGameEvent
-    {
-        Type eventType = typeof(T);
-        return _eventListeners.ContainsKey(eventType) ? _eventListeners[eventType].Count : 0;
-    }
-
-    public bool HasListeners<T>() where T : IGameEvent
-    {
-        Type eventType = typeof(T);
-        return _eventListeners.ContainsKey(eventType) && _eventListeners[eventType].Count > 0;
-    }
-
-    private void OnDestroy()
-    {
-        if (_instance == this)
-        {
-            ClearAllSubscriptions();
-            _instance = null;
-        }
-    }
-    public void PrintDebugInfo()
-    {
-        Debug.Log("=== EventBus Debug Info ===");
-        Debug.Log($"Total Event Types: {_eventListeners.Count}");
-
-        foreach (var kvp in _eventListeners)
-        {
-            Debug.Log($"  {kvp.Key.Name}: {kvp.Value.Count} listeners");
+            var type = typeof(T);
+            if (Handlers.ContainsKey(type))
+                Handlers[type] = (Action<T>)Handlers[type] - handler;
         }
 
-        Debug.Log("=========================");
+        public static void Publish<T>(T evt) where T : IGameEvent
+        {
+            if (Handlers.TryGetValue(typeof(T), out var del))
+                ((Action<T>)del)?.Invoke(evt);
+        }
     }
 }
