@@ -16,7 +16,7 @@ MonoBehaviour:
   WinCondition: 3
   Player1Symbol: X
   Player2Symbol: O
-  AIThinkingTime: 0.1
+  AIThinkingTime: 0.565
   Difficulty: 1
   Player1Color: {r: 0, g: 0, b: 1, a: 1}
   Player2Color: {r: 1, g: 0, b: 0, a: 1}
