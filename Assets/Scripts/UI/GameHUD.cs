@@ -3,11 +3,8 @@ using UnityEngine.UI;
 using TMPro;
 using TicTacToe.Events;
 
-public class GameHUD : MonoBehaviour
+public class GameHUD : UIPanel
 {
-    [Header("Configuration")]
-    [SerializeField] private GameConfig _config;
-    
     [Header("Turn Display")]
     [SerializeField] private TextMeshProUGUI _turnText;
     [SerializeField] private GameObject _player1TurnIndicator;
@@ -24,43 +21,43 @@ public class GameHUD : MonoBehaviour
     [Header("Buttons")]
     [SerializeField] private Button _resetButton;
     [SerializeField] private Button _backToMenuButton;
+  
     
-    [Header("Game Over Panel")]
-    [SerializeField] private GameObject _gameOverPanel;
-    [SerializeField] private TextMeshProUGUI _gameOverText;
-    [SerializeField] private Button _playAgainButton;
-    
-    private void Awake()
+    protected override void InitializeComponents()
     {
+        base.InitializeComponents();
+        
         // Setup button listeners
         if (_resetButton != null)
             _resetButton.onClick.AddListener(OnResetClicked);
         
         if (_backToMenuButton != null)
             _backToMenuButton.onClick.AddListener(OnBackToMenuClicked);
-        
-        if (_playAgainButton != null)
-            _playAgainButton.onClick.AddListener(OnPlayAgainClicked);
-        
-        // Hide game over panel
-        if (_gameOverPanel != null)
-            _gameOverPanel.SetActive(false);
+      
     }
-    
-    private void OnEnable()
+
+    protected override void OnEnable()
     {
+        base.OnEnable();
         EventBus.Subscribe<GameStartedEvent>(OnGameStarted);
         EventBus.Subscribe<TurnChangedEvent>(OnTurnChanged);
         EventBus.Subscribe<ScoreUpdatedEvent>(OnScoreUpdated);
-        EventBus.Subscribe<GameOverEvent>(OnGameOver);
     }
     
-    private void OnDisable()
+    protected override void OnDisable()
     {
+        base.OnDisable();
         EventBus.Unsubscribe<GameStartedEvent>(OnGameStarted);
         EventBus.Unsubscribe<TurnChangedEvent>(OnTurnChanged);
         EventBus.Unsubscribe<ScoreUpdatedEvent>(OnScoreUpdated);
-        EventBus.Unsubscribe<GameOverEvent>(OnGameOver);
+    }
+    
+    protected override void OnShow()
+    {
+        base.OnShow();
+        // Ensure game over panel is hidden when showing HUD
+        // if (_gameOverPanel != null)
+        //     _gameOverPanel.SetActive(false);
     }
     
     private void OnGameStarted(GameStartedEvent evt)
@@ -74,11 +71,24 @@ public class GameHUD : MonoBehaviour
         }
         
         // Hide game over panel
-        if (_gameOverPanel != null)
-            _gameOverPanel.SetActive(false);
+        // if (_gameOverPanel != null)
+        //     _gameOverPanel.SetActive(false);
+        
+        // Hide the GameOverPanel if it's visible (in case we're starting a new game after game over)
+        var gameOverPanel = UIManager.Instance.GetPanel<GameOverPanel>();
+        if (gameOverPanel != null && gameOverPanel.IsVisible())
+        {
+            gameOverPanel.Hide();
+        }
+        
+        // Show this HUD panel if it was hidden
+        if (!IsVisible())
+        {
+            Show();
+        }
         
         // Reset score display if needed
-        UpdateScoreDisplay(0, 0, 0);
+        // UpdateScoreDisplay(0, 0, 0);
     }
     
     private void OnTurnChanged(TurnChangedEvent evt)
@@ -92,7 +102,7 @@ public class GameHUD : MonoBehaviour
         {
             string playerName = currentPlayer == PlayerType.Player1 ? "Player 1" : "Player 2";
             string symbol = currentPlayer == PlayerType.Player1 ? 
-                _config.Player1Symbol : _config.Player2Symbol;
+                GameConfigManager.Instance.Player1Symbol : GameConfigManager.Instance.Player2Symbol;
             _turnText.text = $"{playerName}'s Turn ({symbol})";
         }
         
@@ -121,55 +131,24 @@ public class GameHUD : MonoBehaviour
             _drawScoreText.text = $"Draws: {draws}";
     }
     
-    private void OnGameOver(GameOverEvent evt)
-    {
-        if (_gameOverPanel != null)
-            _gameOverPanel.SetActive(true);
-        
-        if (_gameOverText != null)
-        {
-            string resultText = "";
-            
-            switch (evt.Result)
-            {
-                case GameResult.Player1Win:
-                    resultText = $"Player 1 ({_config.Player1Symbol}) Wins!";
-                    break;
-                case GameResult.Player2Win:
-                    resultText = $"Player 2 ({_config.Player2Symbol}) Wins!";
-                    break;
-                case GameResult.Draw:
-                    resultText = "It's a Draw!";
-                    break;
-            }
-            
-            _gameOverText.text = resultText;
-        }
-    }
-    
+
     private void OnResetClicked()
     {
         EventBus.Publish(new GameResetEvent());
         
-        if (_gameOverPanel != null)
-            _gameOverPanel.SetActive(false);
+  
     }
     
-    private void OnPlayAgainClicked()
-    {
-        OnResetClicked();
-    }
     
     private void OnBackToMenuClicked()
     {
-        // Find and call main menu
-        MainMenuUI mainMenu = FindObjectOfType<MainMenuUI>();
-        if (mainMenu != null)
-        {
-            mainMenu.BackToMainMenu();
-        }
+        // Publish event to go back to main menu
+        EventBus.Publish(new GameResetEvent());
         
-        if (_gameOverPanel != null)
-            _gameOverPanel.SetActive(false);
+        // Show main menu
+        UIManager.Instance.ShowPanel<MainMenuUI>();
+        UIManager.Instance.HidePanel<GameHUD>();
+        
+     
     }
 }

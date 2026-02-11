@@ -3,7 +3,7 @@ using UnityEngine.UI;
 using TMPro;
 using TicTacToe.Events;
 
-public class MainMenuUI : MonoBehaviour
+public class MainMenuUI : UIPanel
 {
     [Header("References")]
     [SerializeField] private Button _playerVsPlayerButton;
@@ -11,11 +11,14 @@ public class MainMenuUI : MonoBehaviour
     [SerializeField] private Button _quitButton;
     
     [Header("Panels")]
-    [SerializeField] private GameObject _mainMenuPanel;
     [SerializeField] private GameObject _gamePanel;
     
-    private void Awake()
+    private GameHUD _gameHud;
+    
+    protected override void InitializeComponents()
     {
+        base.InitializeComponents();
+        
         // Setup button listeners
         if (_playerVsPlayerButton != null)
             _playerVsPlayerButton.onClick.AddListener(OnPlayerVsPlayerClicked);
@@ -25,21 +28,23 @@ public class MainMenuUI : MonoBehaviour
         
         if (_quitButton != null)
             _quitButton.onClick.AddListener(OnQuitClicked);
+        
+        // Find and cache GameHUD reference
+        _gameHud = FindObjectOfType<GameHUD>();
     }
-    
-    private void Start()
+
+    protected override void OnEnable()
     {
-        ShowMainMenu();
-    }
-    
-    private void OnEnable()
-    {
+        base.OnEnable();
         EventBus.Subscribe<GameStartedEvent>(OnGameStarted);
+        // Remove automatic subscription to GameOverEvent - let GameHUD or GameOverPanel handle it
     }
     
-    private void OnDisable()
+    protected override void OnDisable()
     {
+        base.OnDisable();
         EventBus.Unsubscribe<GameStartedEvent>(OnGameStarted);
+        // No need to unsubscribe from GameOverEvent as we didn't subscribe
     }
     
     private void OnPlayerVsPlayerClicked()
@@ -69,29 +74,16 @@ public class MainMenuUI : MonoBehaviour
     
     private void OnGameStarted(GameStartedEvent evt)
     {
-        ShowGamePanel();
-    }
-    
-    private void ShowMainMenu()
-    {
-        if (_mainMenuPanel != null)
-            _mainMenuPanel.SetActive(true);
-        
-        if (_gamePanel != null)
-            _gamePanel.SetActive(false);
-    }
-    
-    private void ShowGamePanel()
-    {
-        if (_mainMenuPanel != null)
-            _mainMenuPanel.SetActive(false);
-        
-        if (_gamePanel != null)
-            _gamePanel.SetActive(true);
+        // Hide main menu and show game UI
+        UIManager.Instance.HidePanel<MainMenuUI>();
+        if (_gameHud != null)
+        {
+            UIManager.Instance.ShowPanel(_gameHud);
+        }
     }
     
     public void BackToMainMenu()
     {
-        ShowMainMenu();
+        UIManager.Instance.ShowPanel<MainMenuUI>();
     }
 }

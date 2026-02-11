@@ -3,11 +3,8 @@ using UnityEngine.UI;
 using System.Collections.Generic;
 using TicTacToe.Events;
 
-public class BoardUIManager : MonoBehaviour
+public class BoardUIManager : UIPanel
 {
-    [Header("Configuration")]
-    [SerializeField] private GameConfig _config;
-    
     [Header("References")]
     [SerializeField] private GridLayoutGroup _gridLayout;
     [SerializeField] private BoardCell _cellPrefab;
@@ -18,25 +15,30 @@ public class BoardUIManager : MonoBehaviour
     private BoardCell[,] _cells;
     private List<BoardCell> _cellList = new List<BoardCell>();
     
-    private void Awake()
+    protected override void InitializePanel()
     {
-        if (_config == null)
+        base.InitializePanel();
+        
+        // Validate configuration through manager
+        if (GameConfigManager.Instance.Config == null)
         {
             Debug.LogError("GameConfig not assigned!");
             enabled = false;
             return;
         }
     }
-    
-    private void OnEnable()
+
+    protected override void OnEnable()
     {
+        base.OnEnable();
         EventBus.Subscribe<GameStartedEvent>(OnGameStarted);
         EventBus.Subscribe<MoveExecutedEvent>(OnMoveExecuted);
         EventBus.Subscribe<GameOverEvent>(OnGameOver);
     }
     
-    private void OnDisable()
+    protected override void OnDisable()
     {
+        base.OnDisable();
         EventBus.Unsubscribe<GameStartedEvent>(OnGameStarted);
         EventBus.Unsubscribe<MoveExecutedEvent>(OnMoveExecuted);
         EventBus.Unsubscribe<GameOverEvent>(OnGameOver);
@@ -54,14 +56,14 @@ public class BoardUIManager : MonoBehaviour
         
         // Setup grid layout
         _gridLayout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-        _gridLayout.constraintCount = _config.BoardSize;
+        _gridLayout.constraintCount = GameConfigManager.Instance.BoardSize;
         
         // Create cells
-        _cells = new BoardCell[_config.BoardSize, _config.BoardSize];
+        _cells = new BoardCell[GameConfigManager.Instance.BoardSize, GameConfigManager.Instance.BoardSize];
         
-        for (int row = 0; row < _config.BoardSize; row++)
+        for (int row = 0; row < GameConfigManager.Instance.BoardSize; row++)
         {
-            for (int col = 0; col < _config.BoardSize; col++)
+            for (int col = 0; col < GameConfigManager.Instance.BoardSize; col++)
             {
                 BoardCell cell = Instantiate(_cellPrefab, _gridLayout.transform);
                 cell.Initialize(row, col);
@@ -93,7 +95,7 @@ public class BoardUIManager : MonoBehaviour
             return;
         
         // Get color for player
-        Color color = evt.Player == PlayerType.Player1 ? _config.Player1Color : _config.Player2Color;
+        Color color = evt.Player == PlayerType.Player1 ? GameConfigManager.Instance.Player1Color : GameConfigManager.Instance.Player2Color;
         
         // Set symbol on cell
         cell.SetSymbol(evt.Symbol, color);
@@ -111,10 +113,10 @@ public class BoardUIManager : MonoBehaviour
     {
         foreach (var pos in winningLine)
         {
-            if (_cells != null && pos.x >= 0 && pos.x < _config.BoardSize && 
-                pos.y >= 0 && pos.y < _config.BoardSize)
+            if (_cells != null && pos.x >= 0 && pos.x < GameConfigManager.Instance.BoardSize && 
+                pos.y >= 0 && pos.y < GameConfigManager.Instance.BoardSize)
             {
-                _cells[pos.x, pos.y].HighlightAsWinning(_config.WinLineColor);
+                _cells[pos.x, pos.y].HighlightAsWinning(GameConfigManager.Instance.WinLineColor);
                 yield return new WaitForSeconds(_winAnimationDelay);
             }
         }

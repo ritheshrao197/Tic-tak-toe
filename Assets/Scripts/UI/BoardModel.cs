@@ -34,7 +34,6 @@ public class BoardModel
     {
         if (row < 0 || row >= _size || col < 0 || col >= _size)
             return false;
-            Debug.Log($"_board[row, col] {_board[row, col]},{row},{col}");
         return _board[row, col] == PlayerType.None;
     }
     
